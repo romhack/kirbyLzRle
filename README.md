@@ -10,13 +10,13 @@ kirbyLzRle [-d | -c] inFileName outFileName
 Description:
 ```
 
-***kirbyLzRle -d*** <inFile> <offset> <outFile>  Decompress block from given ROM file.
+kirbyLzRle -d <inFile> <offset> <outFile> - Decompress block from given ROM file.
 
-***kirbyLzRle -c*** <inFile> <outFile> Compress given plain block.
+kirbyLzRle -c <inFile> <outFile> - Compress given plain block.
 
-***-h, --help*** - Display help
+-h - Display help
 
-***-v, --version*** - Output version information
+-v - Output version information
 ```
 
 See additional files in [release](https://github.com/romhack/kirbyLzRle/releases/latest) archive. 
