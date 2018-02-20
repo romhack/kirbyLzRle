@@ -1,5 +1,5 @@
-========= 
-kirbyLzRle. Mixed LZ-RLE compression tool for HAL Laboratory games.
+# kirbyLzRle. 
+Mixed LZ-RLE compression tool for HAL Laboratory games.
 
 
 Synopsis:
