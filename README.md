@@ -4,7 +4,7 @@ Mixed LZ-RLE compression tool for HAL Laboratory games.
 
 Synopsis:
 ```
-kirbyLzRle [-d | -c] inFileName outFileName
+kirbyLzRle [-d | -c | -cf] inFileName outFileName
 ```
   
 Description:
