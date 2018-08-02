@@ -14,6 +14,8 @@ kirbyLzRle -d <inFile> <offset> <outFile> - Decompress block from given ROM file
 
 kirbyLzRle -c <inFile> <outFile> - Compress given plain block.
 
+kirbyLzRle -cf <inFolder> <baseOffset> <outFile> Batch compress files in given folder.
+
 -h - Display help
 
 -v - Output version information

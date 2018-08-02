@@ -13,9 +13,10 @@ import           Data.List (elemIndices)
 import           Data.List.Split (chunksOf, divvy)
 import           Data.Maybe (fromMaybe)
 import           Data.Ord (comparing)
-import           Data.Word (Word8)
+import           Data.Word (Word8, Word16)
 import           System.Environment (getArgs)
 import           Text.Printf (printf)
+import System.Directory (listDirectory, setCurrentDirectory)
 
 data Entry = Raw [Word8]
            | Rle8 { len :: Int, byte :: Word8 }
@@ -71,16 +72,19 @@ main :: IO ()
 main = getArgs >>= parse
   where
     parse ["-v"] =
-      putStrLn "kirbyLzRle v0.1\nMixed LZ-RLE compression tool \
+      putStrLn "kirbyLzRle v0.2\nMixed LZ-RLE compression tool \
       \for HAL Laboratory games."
     parse ["-d", inFileName, offs, outFileName] =
       decompress inFileName (read offs) outFileName
-    parse ["-c", inFileName, outFileName] = compress inFileName outFileName
+    parse ["-c", inFileName, outFileName] = compressFile inFileName outFileName
+    parse ["-cf", inFolderName, baseOffset, outFileName] = compressFolder
+      inFolderName (read baseOffset) outFileName
     parse _ =
       putStrLn
         "Usage:\n\
       \  kirbyLzRle -d <inFile> <offset> <outFile>  Decompress block from given ROM file.\n\
       \  kirbyLzRle -c <inFile> <outFile> Compress given plain block.\n\
+      \  kirbyLzRle -cf <inFolder> <baseOffset> <outFile> Batch compress files in given folder.\n\
       \Options:\n\
       \  -h     Show this screen.\n\
       \  -v     Show version."
@@ -150,12 +154,29 @@ decode = foldl go []
             then xs
             else cycle xs --cycle, that works with empty lists
 
-compress :: String -> String -> IO () --compress filename
-compress inputName outName = do
-  inputBs <- Bs.readFile inputName
-  let input = Bs.unpack inputBs
-      encodedBlock = (serialize . encode) input
-  Bs.writeFile outName encodedBlock
+compressFile :: String -> String -> IO () -- compress one file by given name
+compressFile inFileName outFileName =  do
+  input <- Bs.readFile inFileName
+  Bs.writeFile outFileName (compress input)
+
+compressFolder :: String -> Word16 -> String -> IO ()
+  --compess all files in folder, recalculating pointers
+compressFolder inFolderName baseOffset outFileName = do
+  inFileNames <- listDirectory inFolderName
+  setCurrentDirectory inFolderName
+  inFiles <- mapM Bs.readFile (reverse inFileNames)
+  let
+    compressedFiles = map compress inFiles
+    compressedLengths = map (fromIntegral . Bs.length) compressedFiles
+    pointers = init $ scanl (+) baseOffset compressedLengths
+    hiPtrBytes = Bs.pack $ map (\w -> fromIntegral (w `shiftR` 8)) pointers
+    loPtrBytes = Bs.pack $ map (\w -> fromIntegral (w .&. 0xFF)) pointers
+  Bs.writeFile outFileName $ Bs.concat [loPtrBytes, hiPtrBytes, Bs.concat compressedFiles]
+
+compress :: Bs.ByteString -> Bs.ByteString --compress ByteString to out ByteString
+compress inputBs = (serialize . encode) input
+  where input = Bs.unpack inputBs
+
 
 encode :: [Word8] -> [Entry] -- encode plain block bytes into compression entries
 encode haystack' = getEntries 0 [] --start from start of haystack and empty rawBuffer
